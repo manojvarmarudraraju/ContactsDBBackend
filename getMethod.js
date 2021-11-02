@@ -1,4 +1,5 @@
 var logger = require('./logger')(module);
+var { getOptions } = require('./getOptions');
 
 
 var getContacts = function(connection, req, res){
@@ -100,10 +101,15 @@ var getContacts = function(connection, req, res){
             result.push(output[contact])
           }
           
-          
+
+          var options = getOptions(connection);
+
+          if("error" in options){
+              res.status(401).send({ message: options});
+          }
           logger.info('Succesful');
           connection.close();
-          return res.json({ data: result });
+          return res.json({ data: result, options: options });
         }
         connection.close(function(err2) {
           if(err2) {

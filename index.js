@@ -6,6 +6,7 @@ var {putContacts} = require('./putMethod');
 var {postContacts} = require('./postMethod');
 var {getContacts} = require('./getMethod');
 var {deleteContacts} = require('./deleteMethod');
+var {getOptions} = require('./getOptions');
 
 var config = {
     dbname : 'bludb',
@@ -66,18 +67,12 @@ app.get('/options', function(req,res){
       logger.info('Error', err);
       return res.status(500).send({ message: 'Internal server error' });
     }
-    connection.query("select * from KBX02002.TYPES", function (err1, rows) {
-      if (err1) console.log(err1);
-      else {
-        return res.json({data: rows});
-      }
-    connection.close(function (err) {
-      if(err != null){
-        return res.status(500).send({ message: 'Internal server error' });
-      }
-    })
+    var rows = getOptions(connection);
+    if("error" in rows){
+      res.status(401).send({message: rows});
+    }
+    return res.status(200).json(rows);
   });
-});
 });
 
 
