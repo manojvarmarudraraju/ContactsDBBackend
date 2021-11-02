@@ -2,6 +2,9 @@ var express =  require('express');
 var app = express();
 var logger = require('./logger')(module);
 
+var { putContacts} = require('./putMethod');
+var {postContacts} = require('./postMethod');
+
 var config = {
     dbname : 'bludb',
     username: "kbx02002",
@@ -173,144 +176,21 @@ app.get('/options', function(req,res){
         return res.status(500).send({ message: 'Internal server error' });
       }
     })
+  });
 });
 });
-});
+
 
 
 app.put('/contacts', function (req, res) {
-  // console.log(req);
-  var values = req.body;
-  ibmdb.open(connStr, function (err,connection) {
-    if(err != null){
-      return res.status(500).send({ message: 'Internal server error'});
-    }
-    connection.beginTransaction(function (err){
-      if(err){
-        connection.close();
-        return res.status(500).send({ message: 'Internal server error'});
-      }
-      var query = {
-        sql: 'select * from new table(insert into CONTACT(FNAME,MNAME,LNAME) values(?,?,?))',
-        params: [values.fname,values.mname,values.lname]
-      };
-      connection.query(query, function(err,rows){
-        if(err){
-          connection.rollbackTransaction();
-          connection.close();
-          return res.status(401).send({ message: err });
-        }
-        var contact = rows[0].CONTACT_ID;
-        console.log("Contact", contact);
-        var address = values.address;
-        console.log("address",address);
-        if(address.length != 0){
-          var address_type = []
-          var address_add = []
-          var city = []
-          var state = []
-          var zip = []
-          var contact_id = []
-          var add_do = false
-          for(var i = 0; i< address.length; i++){
-            if(address[i].add_do == true){
-              add_do = true;
-              address_type.push(address[i].address_type)
-              address_add.push(address[i].address)
-              city.push(address[i].city)
-              state.push(address[i].state)
-              zip.push(address[i].zip)
-              contact_id.push(contact)
-            }
-          }
-          console.log(address_type);
-          if(add_do == true){
-            var add_query = {
-              sql : "select * from new table(insert into ADDRESS (contact_id,address_type, address, city, state, zip) values(?,?,?,?,?,?))",
-              params: [
-                {
-                  ParamType: "ARRAY",
-                  DataType: 1,
-                  Data: contact_id
-                },
-                {
-                  ParamType : "ARRAY",
-                  DataType : 1,
-                  Data: address_type,
-                },
-                {
-                  ParamType : "ARRAY",
-                  DataType : 1,
-                  Data: address_add,
-                },
-                {
-                  ParamType : "ARRAY",
-                  DataType : 1,
-                  Data: city,
-                },
-                {
-                  ParamType : "ARRAY",
-                  DataType : 1,
-                  Data: state,
-                },
-                {
-                  ParamType : "ARRAY",
-                  DataType : 1,
-                  Data: zip,
-                }
-              ],
-              ArraySize: state.length
-            };
-
-            console.log(add_query);
-            connection.query(add_query, function(err, add_results){
-              if(err){
-                connection.rollbackTransaction();
-                connection.close();
-                return res.status(401).send({message: err});
-              }
-              console.log(add_results);
-
-              var phone_do =  false;
-
-              var phone_type = []
-              var area_code = []
-              var contact_id = []
-              var mobile = []
-              var phone = values.phone;
-              for(var i = 0; i < phone.length; i){
-                if(phone[i].phone_do){
-                  phone_do = true;
-                  phone_type.push(phone[i].phone_type);
-                  area_code.push(phone[i].area_code);
-                  contact_id.push(phone[i].contact);
-                  mobile.push(phone[i].mobile_number);
-                }
-              }
-
-              console.log("rows",rows);
-              connection.commitTransaction(function(err) {
-                if(err){
-                  connection.rollbackTransaction();
-                  connection.close();
-                  return res.status(401).send({ message: err});
-                }
-
-                return res.status(200).send({message: "Success"});
-              });
-            });
-          }
-        }
-        
-
-        
-        
-      })
-    })
-  })
-
-  //return res.json(values);
+  putContacts(req, res,connStr);
 })
+
+app.post('/contacts', function (req, res) {
+  postContacts(req, res,connStr);
+})
+
+
 
 
 app.listen(8000,function(){
