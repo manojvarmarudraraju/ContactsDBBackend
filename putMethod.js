@@ -1,5 +1,6 @@
 var ibmdb = require('ibm_db');
 var logger = require('./logger')(module);
+var { getContacts} = require('./getMethod');
 
 
 function address_put(connection, values, contact){
@@ -236,15 +237,12 @@ var putContacts = function (req, res, connStr) {
                 return res.status(401).send({message: date_vals.error});
             }
             console.log(date_vals);
-            var transactionOut = connection.commitTransactionSync();
-
-            if("error" in transactionOut){
-                connection.rollbackTransactionSync();
-                connection.closeSync();
-                return res.status(401).send({ message: transactionOut.error});
-            }
+            connection.commitTransactionSync();
             logger.info("Transaction succesfull");
-            return res.status(200).send({message: "Success"});
+
+            getContacts(connection, req, res);
+            connection.close();
+            // return res.status(200).send({message: "Success"});
         });
     });
 };
