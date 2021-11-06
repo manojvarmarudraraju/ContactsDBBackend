@@ -11,6 +11,7 @@ var deleteAddress = (connection, values) => {
         q += String(del[i])
     }
     q += ")";
+    
     return connection.querySync(q)
 }
 
@@ -26,7 +27,7 @@ var deletePhone = (connection, values) => {
 
 var deleteDate = (connection, values) => {
     var del = values.date_delete;
-    var q = "delete from KBX02002.DATE where DATE_ID in (";
+    var q = "delete from KBX02002.DATES where DATE_ID in (";
     for(var i=0; i<del.length; i++){
         q += String(del[i])
     }
@@ -40,6 +41,7 @@ var updateContact = (connection, values) => {
     var mname = values.mname;
     var lname = values.lname;
     var q = "update KBX02002.CONTACT SET fname='" + fname + "', mname='" + mname + "', lname='" + lname +"' where CONTACT_ID = " + String(contact);
+    console.log(q);
     return connection.querySync(q);
 }
 
@@ -130,7 +132,8 @@ var updateDate = (connection, values) => {
 }
 
 function postContacts(req, res, connStr) {
-    var values = req.body;
+    var values = req.body.data;
+    console.log(values);
     ibmdb.open(connStr, function (err, connection) {
         if (err)
         {
@@ -144,27 +147,32 @@ function postContacts(req, res, connStr) {
                 return res.status(500).send({ message: 'Internal server error'});
             }
 
-            if(address_delete in values && typeof values[address_delete] === 'object' && values[address_delete] != 0){
+            if("address_delete" in values && typeof values["address_delete"] === 'object' && values["address_delete"] != 0){
+                
                 var del1 = deleteAddress(connection, values)
                 if("error" in del1){
                     connection.rollbackTransactionSync();
                     connection.close();
+                    console.log("Addresses Delete: ", del1);
                     return res.status(401).send({ message: del1.error});
                 }
             }
-            if(phone_delete in values && typeof values[phone_delete] === 'object' && values[phone_delete] != 0){
+            if("phone_delete" in values && typeof values["phone_delete"] === 'object' && values["phone_delete"] != 0){
+                console.log("Phone Delete inside");
                 var del1 = deletePhone(connection, values)
                 if("error" in del1){
                     connection.rollbackTransactionSync();
                     connection.close();
+                    console.log("Phones Delete: ", del1);
                     return res.status(401).send({ message: del1.error});
                 }
             }
-            if(date_delete in values && typeof values[date_delete] === 'object' && values[date_delete] != 0){
+            if("date_delete" in values && typeof values["date_delete"] === 'object' && values["date_delete"] != 0){
                 var del1 = deleteDate(connection, values)
                 if("error" in del1){
                     connection.rollbackTransactionSync();
                     connection.close();
+                    console.log("Dates Delete: ", del1);
                     return res.status(401).send({ message: del1.error});
                 }
             }
@@ -172,24 +180,28 @@ function postContacts(req, res, connStr) {
             if("error" in contact){
                 connection.rollbackTransactionSync();
                 connection.close();
+                console.log("Contact: ", contact);
                 return res.status(401).send({ message: contact.error});
             }
             var address = updateAddress(connection,values);
             if("error" in address){
                 connection.rollbackTransactionSync();
                 connection.close();
+                console.log("Address: ", address);
                 return res.status(401).send({ message: address.error});
             }
             var phone = updatePhone(connection,values);
             if("error" in phone){
                 connection.rollbackTransactionSync();
                 connection.close();
+                console.log("Phone: ", phone);
                 return res.status(401).send({ message: phone.error});
             }
             var date = updateDate(connection,values);
             if("error" in date){
                 connection.rollbackTransactionSync();
                 connection.close();
+                console.log("Dates: ", date);
                 return res.status(401).send({ message: date.error});
             }
 
