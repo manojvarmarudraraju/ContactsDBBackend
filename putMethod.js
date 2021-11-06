@@ -194,7 +194,7 @@ var dates_put = function(connection, values, contact){
 
 var putContacts = function (req, res, connStr) {
     // console.log(req);
-    var values = req.body;
+    var values = req.body.data;
     ibmdb.open(connStr, function (err,connection) {
         if(err != null){
             return res.status(500).send({ message: 'Internal server error'});
@@ -212,6 +212,7 @@ var putContacts = function (req, res, connStr) {
             var rows = connection.querySync(query);
             if("error" in rows){
                 connection.closeSync();
+                console.log("Contact",rows);
                 return res.status(401).send({message: rows.Error});
             }
             contact = rows[0].CONTACT_ID;
@@ -220,12 +221,14 @@ var putContacts = function (req, res, connStr) {
             if("error" in address_vals){
                 connection.rollbackTransactionSync();
                 connection.closeSync();
+                console.log("address",address_vals);
                 return res.status(401).send({message: address_vals.error});
             }
             var phone_vals = phone_put(connection, values, parseInt(contact));
             if("error" in phone_vals){
                 connection.rollbackTransactionSync();
                 connection.closeSync();
+                console.log("Phone",phone_vals);
                 return res.status(401).send({message: phone_vals.error});
             }
             
@@ -234,6 +237,7 @@ var putContacts = function (req, res, connStr) {
             if("error" in date_vals){
                 connection.rollbackTransactionSync();
                 connection.closeSync();
+                console.log("Date",date_vals);
                 return res.status(401).send({message: date_vals.error});
             }
             console.log(date_vals);
