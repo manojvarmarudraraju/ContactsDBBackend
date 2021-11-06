@@ -4,6 +4,36 @@ var {address_put, dates_put,phone_put} = require('./putMethod');
 var { getContacts} = require('./getMethod');
 
 
+var deleteAddress = (connection, values) => {
+    var del = values.address_delete;
+    var q = "delete from KBX02002.ADDRESS where ADDRESS_ID in (";
+    for(var i=0; i<del.length; i++){
+        q += String(del[i])
+    }
+    q += ")";
+    return connection.querySync(q)
+}
+
+var deletePhone = (connection, values) => {
+    var del = values.phone_delete;
+    var q = "delete from KBX02002.PHONE where PHONE_ID in (";
+    for(var i=0; i<del.length; i++){
+        q += String(del[i])
+    }
+    q += ")";
+    return connection.querySync(q)
+}
+
+var deleteDate = (connection, values) => {
+    var del = values.date_delete;
+    var q = "delete from KBX02002.DATE where DATE_ID in (";
+    for(var i=0; i<del.length; i++){
+        q += String(del[i])
+    }
+    q += ")";
+    return connection.querySync(q)
+}
+
 var updateContact = (connection, values) => {
     var contact = values.contact_id;
     var fname = values.fname;
@@ -112,6 +142,31 @@ function postContacts(req, res, connStr) {
             if(err){
                 connection.close();
                 return res.status(500).send({ message: 'Internal server error'});
+            }
+
+            if(address_delete in values && typeof values[address_delete] === 'object' && values[address_delete] != 0){
+                var del1 = deleteAddress(connection, values)
+                if("error" in del1){
+                    connection.rollbackTransactionSync();
+                    connection.close();
+                    return res.status(401).send({ message: del1.error});
+                }
+            }
+            if(phone_delete in values && typeof values[phone_delete] === 'object' && values[phone_delete] != 0){
+                var del1 = deletePhone(connection, values)
+                if("error" in del1){
+                    connection.rollbackTransactionSync();
+                    connection.close();
+                    return res.status(401).send({ message: del1.error});
+                }
+            }
+            if(date_delete in values && typeof values[date_delete] === 'object' && values[date_delete] != 0){
+                var del1 = deleteDate(connection, values)
+                if("error" in del1){
+                    connection.rollbackTransactionSync();
+                    connection.close();
+                    return res.status(401).send({ message: del1.error});
+                }
             }
             var contact = updateContact(connection, values);
             if("error" in contact){

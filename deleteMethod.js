@@ -1,5 +1,6 @@
 
 var ibmdb = require('ibm_db');
+var { getContacts} = require('./getMethod');
 
 var deleteContacts = (connStr, req, res) => {
     ibmdb.open(connStr, function (err, connection) {
@@ -89,7 +90,10 @@ var deleteContacts = (connStr, req, res) => {
             connection.rollbackTransactionSync()
             return res.status(401).send({message: final});
         }
-        return res.status(200).send({message: "Succesful"});
+
+        getContacts(connection, req, res);
+        connection.close();
+        // return res.status(200).send({message: "Succesful"});
     });
 }
 
