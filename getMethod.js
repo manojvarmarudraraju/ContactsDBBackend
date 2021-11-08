@@ -3,9 +3,18 @@ var { getOptions } = require('./getOptions');
 
 
 var getContacts = function(connection, req, res){
-    connection.query("select * from KBX02002.CONTACTS_VIEW order by FNAME", function (err1, rows) {
+    console.log(req.body);
+    var q = "select * from KBX02002.CONTACTS_VIEW ";
+    
+    if("search" in req.body && req.body.search !== ""){
+        var search = req.body.search;
+        var x = "'%"+String(search)+"%'";
+        q += "where LOWER(FNAME) like "+x+" or  LOWER(MNAME) like "+x+" or LOWER(LNAME) like " +x + " or LOWER(ADDRESS) like " +x+" or LOWER(CITY) like " +x+" or LOWER(STATE) like " +x+" or LOWER(ZIP) like " +x+ " or LOWER(AREA_CODE) like " +x+" or LOWER(MOBILE_NUMBER) like " +x+" or DATE_DATE like " +x;
+    }
+    connection.query(q, function (err1, rows) {
         if (err1) {
           connection.close();
+          console.log(err1);
           return res.status(500).send({ message: 'Internal server error' });
         }
         else {
@@ -100,6 +109,12 @@ var getContacts = function(connection, req, res){
             output[contact].date = dt_arr
             result.push(output[contact])
           }
+
+          result = result.sort((a,b) => {
+              var x = a.fname;
+              var y = b.fname;
+              return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+            });
           
 
           var options = getOptions(connection);
