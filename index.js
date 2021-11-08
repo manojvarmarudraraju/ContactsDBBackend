@@ -7,6 +7,7 @@ var {postContacts} = require('./postMethod');
 var {getContacts} = require('./getMethod');
 var {deleteContacts} = require('./deleteMethod');
 var {getOptions} = require('./getOptions');
+var {addOptions} = require('./addOptions');
 
 var config = {
     dbname : 'bludb',
@@ -97,6 +98,17 @@ app.post('/contactSearch', function (req, res) {
       return res.status(500).send({ message: 'Internal server error' });
     }
     return getContacts(connection,req,res);
+  });
+})
+
+app.post('/addOption', function (req, res) {
+  ibmdb.open(connStr, function (err, connection) {
+    if (err)
+    {
+      logger.info('Error', err);
+      return res.status(500).send({ message: 'Internal server error' });
+    }
+    return addOptions(connection,req,res);
   });
 })
 
