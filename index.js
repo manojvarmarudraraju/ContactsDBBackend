@@ -89,6 +89,17 @@ app.delete('/contacts', function (req, res) {
   deleteContacts(connStr,req,res);
 })
 
+app.post('/contactSearch', function (req, res) {
+  ibmdb.open(connStr, function (err, connection) {
+    if (err)
+    {
+      logger.info('Error', err);
+      return res.status(500).send({ message: 'Internal server error' });
+    }
+    return getContacts(connection,req,res);
+  });
+})
+
 
 
 
